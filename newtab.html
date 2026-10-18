@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MyTab</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div id="bg-media">
+  <div id="default-bg"></div>
+  <img id="bg-img" alt=""/>
+  <video id="bg-video" autoplay muted loop playsinline></video>
+  <div id="bg-overlay"></div>
+</div>
+
+<div id="main-container">
+  <div id="search-wrap">
+    <svg id="search-icon" width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input id="search" type="text" placeholder="Search Google..." autocomplete="off"/>
+    <button id="search-clear-btn" type="button" title="Clear">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+    </button>
+    <div id="resize-handle-left" class="resize-handle-side"></div>
+    <div id="resize-handle" class="resize-handle-side"></div>
+    <div id="search-suggest-box"></div>
+  </div>
+  <div id="tabs-wrap"><div id="tabs"></div></div>
+  <div id="shortcuts"></div>
+</div>
+
+<div id="drag-handle" title="Drag to move">
+  <div class="handle-bar"></div>
+</div>
+
+<!-- Hover zone (invisible, bottom-right corner) -->
+<div id="settings-zone"></div>
+
+<!-- Settings button -->
+<button id="settings-btn" title="Settings">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+</button>
+
+<!-- Settings Panel -->
+<div id="settings-panel">
+  <div class="panel-header">
+    <h3>Settings</h3>
+    <button id="settings-reload-btn" title="Reload background video from folder">↺</button>
+  </div>
+  <div class="panel-body">
+
+    <div class="acc-section">
+      <div class="acc-header" id="bg-acc-header">
+        <span class="acc-title">🖼️ &nbsp;Background</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+
+        <!-- ── Single file input row (video or image) ── -->
+        <div class="bg-source-row" id="bg-single-row" style="margin-bottom:8px;">
+          <div class="bg-source-left">
+            <label class="upload-btn bg-source-add-btn" for="file-input" title="Add Single Video or Image">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </label>
+            <input type="file" id="file-input" accept="video/*,image/*"/>
+            <span class="bg-source-name" id="bg-single-name">Single File</span>
+          </div>
+          <div class="bg-source-right">
+            <button class="icon-btn icon-btn-danger bg-folder-action-btn" id="clear-bg" title="Remove Single File">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+            <label class="toggle-switch bg-source-toggle">
+              <input type="checkbox" id="bg-single-active-toggle"/>
+              <span class="toggle-track"></span>
+              <span class="toggle-thumb"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- ── Timer display row (shows above video folder when timer is active) ── -->
+        <div class="toggle-row" id="bg-timer-active-row" style="display:none; margin-bottom:8px; padding:7px 10px; background:rgba(255,255,255,.18); border-radius:12px;">
+          <span style="font-size:12px; font-weight:600; opacity:.85;" id="bg-timer-countdown">⏱ --:--</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bg-timer-active-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+
+        <!-- ── Video Folder Row ── -->
+        <div class="bg-source-row" id="bg-video-row">
+          <div class="bg-source-left">
+            <label class="upload-btn bg-source-add-btn" for="bg-folder-input" id="bg-folder-label" title="Add Video Folder">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            </label>
+            <input type="file" id="bg-folder-input" accept="video/*" webkitdirectory multiple/>
+            <span class="bg-source-name" id="bg-video-folder-name">Video Folder</span>
+          </div>
+          <div class="bg-source-right">
+            <button class="icon-btn bg-folder-action-btn" id="bg-folder-next" title="Next Folder Video">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            </button>
+            <button class="icon-btn icon-btn-danger bg-folder-action-btn" id="bg-folder-remove" title="Remove Video Folder">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+            <label class="toggle-switch bg-source-toggle">
+              <input type="checkbox" id="bg-video-active-toggle"/>
+              <span class="toggle-track"></span>
+              <span class="toggle-thumb"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- ── Wallpaper Folder Row ── -->
+        <div class="bg-source-row" id="bg-wallpaper-row" style="margin-top:8px">
+          <div class="bg-source-left">
+            <label class="upload-btn bg-source-add-btn" for="bg-wallpaper-input" id="bg-wallpaper-label" title="Add Wallpaper Folder">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            </label>
+            <input type="file" id="bg-wallpaper-input" accept="image/*" webkitdirectory multiple/>
+            <span class="bg-source-name" id="bg-wallpaper-folder-name">Wallpaper Folder</span>
+          </div>
+          <div class="bg-source-right">
+            <button class="icon-btn bg-folder-action-btn" id="bg-wallpaper-next" title="Next Wallpaper">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            </button>
+            <button class="icon-btn icon-btn-danger bg-folder-action-btn" id="bg-wallpaper-remove" title="Remove Wallpaper Folder">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+            <label class="toggle-switch bg-source-toggle">
+              <input type="checkbox" id="bg-wallpaper-active-toggle"/>
+              <span class="toggle-track"></span>
+              <span class="toggle-thumb"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Folder status badge — hidden -->
+        <div id="bg-folder-status" style="display:none !important">
+          <span id="bg-folder-status-text"></span>
+        </div>
+
+        <!-- Auto-advance on open toggle -->
+        <div class="toggle-row" id="bg-auto-advance-row" style="display:none; margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Change on new tab</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bg-auto-advance-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+
+        <!-- Add Timer collapsible -->
+        <div class="bg-timer-acc" style="margin-top:10px;">
+          <div class="bg-timer-acc-header" id="bg-timer-acc-header">
+            <span class="bg-timer-acc-title">Add Timer</span>
+            <svg class="bg-timer-acc-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+          </div>
+          <div class="bg-timer-acc-body" id="bg-timer-acc-body" style="display:none;">
+            <div class="bg-timer-row" style="display:flex; margin-top:8px;">
+              <div class="bg-timer-field">
+                <span class="bg-timer-label">Auto-switch every</span>
+                <div class="bg-num-spinner">
+                  <button class="bg-spinner-btn" id="bg-time-dec" type="button" title="Decrease">−</button>
+                  <input type="number" id="bg-folder-time" min="0" value="0" placeholder="0"/>
+                  <button class="bg-spinner-btn" id="bg-time-inc" type="button" title="Increase">+</button>
+                </div>
+              </div>
+              <div class="bg-timer-unit-wrap">
+                <select id="bg-folder-unit">
+                  <option value="minute">Minute</option>
+                  <option value="hour">Hour</option>
+                  <option value="day">Day</option>
+                </select>
+                <div class="custom-select" id="bg-unit-custom-select">
+                  <div class="custom-select-trigger" tabindex="0">
+                    <span class="custom-select-label">Minute</span>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+                  </div>
+                  <div class="custom-select-list"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add timer button -->
+            <button class="icon-btn icon-btn-accent bg-timer-set-btn" id="bg-timer-set-btn" type="button" title="Set Timer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <p id="bg-info" style="margin-top:8px;">No custom background</p>
+      </div>
+    </div>
+
+    <div class="acc-section">
+      <div class="acc-header">
+        <span class="acc-title">🔍 &nbsp;Search Bar</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+        <div class="toggle-row">
+          <span style="font-size:13px; opacity:.85;">Show Search Bar</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="search-enabled-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Auto-hide (hover to show)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="search-autohide-toggle"/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Ultra Transparent</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="search-ultra-toggle"/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Show Icon</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="search-icon-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Search Suggestions</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="search-suggest-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Auto-search on Click</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="search-autosearch-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Bounce</span>
+          <input type="range" id="search-bounce-slider" min="0" max="100" value="100"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hidden Intensity <span id="search-hidden-opacity-val" style="opacity:.55;font-size:11px;">0%</span></span>
+          <input type="range" id="search-hidden-opacity-slider" min="0" max="100" value="0"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Focus Glow <span id="search-glow-size-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <div class="glow-row">
+            <input type="range" id="search-glow-size-slider" min="0" max="40" value="8"/>
+            <label class="glow-color-swatch" id="search-glow-color-swatch" style="background:#ffffff;">
+              <input type="color" id="search-glow-color-picker" value="#ffffff"/>
+            </label>
+          </div>
+        </div>
+        <button class="reset-text-btn" id="clear-search-history-btn" style="margin-top:12px;">Clear Search History</button>
+      </div>
+    </div>
+
+    <div class="acc-section">
+      <div class="acc-header">
+        <span class="acc-title">🔗 &nbsp;Shortcuts</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+
+        <!-- Add Shortcut collapsible -->
+        <div class="bg-timer-acc">
+          <div class="bg-timer-acc-header" id="add-sc-acc-header">
+            <span class="bg-timer-acc-title">Add Shortcut</span>
+            <svg class="bg-timer-acc-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+          </div>
+          <div class="bg-timer-acc-body" id="add-sc-acc-body" style="display:none;">
+            <div class="add-shortcut-form" style="margin-top:8px;">
+              <input type="text" id="sc-name" placeholder="Name (e.g. YouTube)"/>
+              <input type="text" id="sc-url" placeholder="URL (e.g. youtube.com)"/>
+              <div class="row-input">
+                <label class="upload-btn sc-icon-btn" for="sc-icon-input" title="Custom Icon (optional)">
+                  <span id="sc-icon-preview">🖼️</span>
+                </label>
+                <input type="file" id="sc-icon-input" accept="image/*"/>
+                <div class="custom-select" id="sc-cat-dropdown" style="flex:1">
+                  <button class="custom-select-trigger" type="button">
+                    <span class="custom-select-label">—</span>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="1,3 5,7 9,3"/></svg>
+                  </button>
+                  <div class="custom-select-list"></div>
+                </div>
+                <button class="icon-btn icon-btn-accent" id="add-sc-btn" title="Add Shortcut">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toggle-row" style="margin-top:12px;">
+          <span style="font-size:13px; opacity:.85;">Shortcut Names</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="sc-names-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Auto-hide (hover to show)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="sc-autohide-toggle"/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hidden Intensity <span id="sc-hidden-opacity-val" style="opacity:.55;font-size:11px;">0%</span></span>
+          <input type="range" id="sc-hidden-opacity-slider" min="0" max="100" value="0"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Size</span>
+          <input type="range" id="sc-icon-size-slider" min="28" max="72" value="46"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Bounce</span>
+          <input type="range" id="icon-bounce-slider" min="0" max="100" value="100"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Gap <span id="sc-icon-gap-val" style="opacity:.55;font-size:11px;">10px</span></span>
+          <input type="range" id="sc-icon-gap-slider" min="-2" max="40" value="10"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hover Glow <span id="sc-glow-size-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <div class="glow-row">
+            <input type="range" id="sc-glow-size-slider" min="0" max="40" value="8"/>
+            <label class="glow-color-swatch" id="sc-glow-color-swatch" style="background:#ffffff;">
+              <input type="color" id="sc-glow-color-picker" value="#ffffff"/>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc-section">
+      <div class="acc-header">
+        <span class="acc-title">🗂️ &nbsp;Category</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+
+        <!-- Add Category collapsible -->
+        <div class="bg-timer-acc">
+          <div class="bg-timer-acc-header" id="add-cat-acc-header">
+            <span class="bg-timer-acc-title">Add Category</span>
+            <svg class="bg-timer-acc-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+          </div>
+          <div class="bg-timer-acc-body" id="add-cat-acc-body" style="display:none;">
+            <div class="add-shortcut-form" style="margin-top:8px;">
+              <div class="row-input">
+                <input type="text" id="cat-name-input" placeholder="Category name (e.g. Work)"/>
+                <button class="icon-btn icon-btn-accent" id="add-cat-btn" title="Add Category">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toggle-row" style="margin-top:12px;">
+          <span style="font-size:13px; opacity:.85;">Show Category Name</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="cat-names-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Auto-hide (hover to show)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="cat-autohide-toggle"/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hidden Intensity <span id="cat-hidden-opacity-val" style="opacity:.55;font-size:11px;">0%</span></span>
+          <input type="range" id="cat-hidden-opacity-slider" min="0" max="100" value="0"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Bounce</span>
+          <input type="range" id="cat-bounce-slider" min="0" max="100" value="100"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Gap <span id="cat-icon-gap-val" style="opacity:.55;font-size:11px;">7px</span></span>
+          <input type="range" id="cat-icon-gap-slider" min="0" max="40" value="7"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hover Glow <span id="cat-glow-size-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <div class="glow-row">
+            <input type="range" id="cat-glow-size-slider" min="0" max="40" value="8"/>
+            <label class="glow-color-swatch" id="cat-glow-color-swatch" style="background:#ffffff;">
+              <input type="color" id="cat-glow-color-picker" value="#ffffff"/>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc-section">
+      <div class="acc-header">
+        <span class="acc-title">⚡ &nbsp;Quick Panel</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+
+        <div class="toggle-row">
+          <span style="font-size:13px; opacity:.85;">Show Quick Panel</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="ql-enabled-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+
+        <!-- Add Quick Link collapsible -->
+        <div class="bg-timer-acc">
+          <div class="bg-timer-acc-header" id="add-ql-acc-header">
+            <span class="bg-timer-acc-title">Add Quick Link</span>
+            <svg class="bg-timer-acc-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+          </div>
+          <div class="bg-timer-acc-body" id="add-ql-acc-body" style="display:none;">
+            <div class="add-shortcut-form" style="margin-top:8px;">
+              <input type="text" id="ql-name" placeholder="Name (e.g. Bookmarks)"/>
+              <input type="text" id="ql-url" placeholder="URL (e.g. chrome://bookmarks)"/>
+              <div class="row-input">
+                <label class="upload-btn sc-icon-btn" for="ql-icon-input" title="Custom Icon (optional)">
+                  <span id="ql-icon-preview">🖼️</span>
+                </label>
+                <input type="file" id="ql-icon-input" accept="image/*" style="display:none"/>
+                <button class="icon-btn icon-btn-accent" id="add-ql-btn" title="Add Quick Link">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toggle-row" style="margin-top:12px;">
+          <span style="font-size:13px; opacity:.85;">Auto-hide Quick Panel</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="ql-autohide-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hidden Intensity <span id="ql-hidden-opacity-val" style="opacity:.55;font-size:11px;">0%</span></span>
+          <input type="range" id="ql-hidden-opacity-slider" min="0" max="100" value="0"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Size</span>
+          <input type="range" id="ql-icon-size-slider" min="20" max="52" value="28"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Bounce</span>
+          <input type="range" id="ql-bounce-slider" min="0" max="100" value="100"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Gap <span id="ql-icon-gap-val" style="opacity:.55;font-size:11px;">4px</span></span>
+          <input type="range" id="ql-icon-gap-slider" min="-7" max="30" value="4"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hover Glow <span id="ql-glow-size-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <div class="glow-row">
+            <input type="range" id="ql-glow-size-slider" min="0" max="40" value="8"/>
+            <label class="glow-color-swatch" id="ql-glow-color-swatch" style="background:#ffffff;">
+              <input type="color" id="ql-glow-color-picker" value="#ffffff"/>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc-section">
+      <div class="acc-header">
+        <span class="acc-title">🧩 &nbsp;Browser Tools</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+        <div class="toggle-row">
+          <span style="font-size:13px; opacity:.85;">Show Panel</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bt-enabled-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Auto-hide Panel</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bt-autohide-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hidden Intensity <span id="bt-hidden-opacity-val" style="opacity:.55;font-size:11px;">0%</span></span>
+          <input type="range" id="bt-hidden-opacity-slider" min="0" max="100" value="0"/>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Show Labels</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bt-labels-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Size</span>
+          <input type="range" id="bt-icon-size-slider" min="20" max="52" value="28"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Bounce</span>
+          <input type="range" id="bt-bounce-slider" min="0" max="100" value="100"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Gap <span id="bt-icon-gap-val" style="opacity:.55;font-size:11px;">4px</span></span>
+          <input type="range" id="bt-icon-gap-slider" min="-6" max="30" value="4"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hover Glow <span id="bt-glow-size-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <div class="glow-row">
+            <input type="range" id="bt-glow-size-slider" min="0" max="40" value="8"/>
+            <label class="glow-color-swatch" id="bt-glow-color-swatch" style="background:#ffffff;">
+              <input type="color" id="bt-glow-color-picker" value="#ffffff"/>
+            </label>
+          </div>
+        </div>
+        <div id="bt-icon-list" class="bt-icon-list"></div>
+      </div>
+    </div>
+
+    <div class="acc-section">
+      <div class="acc-header">
+        <span class="acc-title">Side Bar</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+        <div class="toggle-row">
+          <span style="font-size:13px; opacity:.85;">Show Side Bar</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="sb-enabled-toggle"/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Show Names</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="sb-names-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:8px;">
+          <span style="font-size:13px; opacity:.85;">Auto-Hide</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="sb-autohide-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hidden Intensity <span id="sb-hidden-opacity-val" style="opacity:.55;font-size:11px;">0%</span></span>
+          <input type="range" id="sb-hidden-opacity-slider" min="0" max="100" value="0"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Side Bar Icon Size</span>
+          <input type="range" id="sb-icon-size-slider" min="22" max="64" value="34"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Bounce</span>
+          <input type="range" id="sb-bounce-slider" min="0" max="100" value="100"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Gap <span id="sb-icon-gap-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <input type="range" id="sb-icon-gap-slider" min="0" max="30" value="8"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hover Glow <span id="sb-glow-size-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <div class="glow-row">
+            <input type="range" id="sb-glow-size-slider" min="0" max="40" value="8"/>
+            <label class="glow-color-swatch" id="sb-glow-color-swatch" style="background:#ffffff;">
+              <input type="color" id="sb-glow-color-picker" value="#ffffff"/>
+            </label>
+          </div>
+        </div>
+        <!-- Add URL collapsible -->
+        <div class="bg-timer-acc sb-sub-acc" style="margin-top:12px;">
+          <div class="bg-timer-acc-header" id="sb-add-url-header">
+            <span class="bg-timer-acc-title">Add URL</span>
+            <svg class="bg-timer-acc-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+          </div>
+          <div class="bg-timer-acc-body" id="sb-add-url-body" style="display:none;">
+            <div class="add-shortcut-form" id="sb-url-form" style="margin-top:8px;">
+              <input type="text" id="sb-name" placeholder="Name"/>
+              <input type="text" id="sb-url" placeholder="URL"/>
+              <div class="row-input">
+                <label class="upload-btn sc-icon-btn" for="sb-icon-input" title="Custom Icon">
+                  <span id="sb-icon-preview">+</span>
+                </label>
+                <input type="file" id="sb-icon-input" accept="image/*" style="display:none"/>
+                <button class="icon-btn icon-btn-accent" id="add-sb-btn" title="Add Side Bar Item">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Added URLs collapsible -->
+        <div class="bg-timer-acc sb-sub-acc" style="margin-top:8px;">
+          <div class="bg-timer-acc-header" id="sb-added-urls-header">
+            <span class="bg-timer-acc-title">Added URLs <span id="sb-added-urls-count" style="opacity:.6;">(0)</span></span>
+            <svg class="bg-timer-acc-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+          </div>
+          <div class="bg-timer-acc-body" id="sb-added-urls-body" style="display:none;">
+            <div id="sb-icon-list" class="bt-icon-list" style="margin-top:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Extra Buttons Add collapsible -->
+        <div class="bg-timer-acc sb-sub-acc" style="margin-top:8px;">
+          <div class="bg-timer-acc-header" id="sb-extra-toggle">
+            <span class="bg-timer-acc-title">Extra Buttons Add</span>
+            <svg class="bg-timer-acc-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+          </div>
+          <div id="sb-extra-body" class="bg-timer-acc-body sb-extra-body" style="display:none;">
+            <div id="sb-tool-list" class="sb-tool-list" style="margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc-section">
+      <div class="acc-header">
+        <span class="acc-title">Tab Dock</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+        <div class="toggle-row">
+          <span style="font-size:13px; opacity:.85;">Show Tab Dock</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="tabdock-enabled-toggle"/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Tab Icon Size</span>
+          <input type="range" id="tabdock-icon-size-slider" min="18" max="52" value="28"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Active Glow</span>
+          <input type="range" id="tabdock-glow-slider" min="0" max="100" value="70"/>
+        </div>
+        <div class="toggle-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Duplicate Numbers</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="tabdock-dup-toggle" checked/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Auto Hide</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="tabdock-autohide-toggle"/>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hidden Intensity <span id="tabdock-hidden-opacity-val" style="opacity:.55;font-size:11px;">0%</span></span>
+          <input type="range" id="tabdock-hidden-opacity-slider" min="0" max="100" value="0"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Bounce</span>
+          <input type="range" id="tabdock-bounce-slider" min="0" max="100" value="100"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Icon Gap <span id="tabdock-icon-gap-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <input type="range" id="tabdock-icon-gap-slider" min="0" max="30" value="8"/>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Hover Glow <span id="tabdock-hoverglow-size-val" style="opacity:.55;font-size:11px;">8px</span></span>
+          <div class="glow-row">
+            <input type="range" id="tabdock-hoverglow-size-slider" min="0" max="40" value="8"/>
+            <label class="glow-color-swatch" id="tabdock-hoverglow-color-swatch" style="background:#ffffff;">
+              <input type="color" id="tabdock-hoverglow-color-picker" value="#ffffff"/>
+            </label>
+          </div>
+        </div>
+        <div class="slider-row" style="margin-top:10px;">
+          <span style="font-size:13px; opacity:.85;">Close Tab</span>
+          <div id="tabdock-close-mode" class="tabdock-close-options">
+            <button type="button" class="tabdock-close-option active" data-mode="hover">Hover Button</button>
+            <button type="button" class="tabdock-close-option" data-mode="right_click_button">Right Click Button</button>
+            <button type="button" class="tabdock-close-option" data-mode="right_click">Instant Right Click</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc-section">
+      <div class="acc-header">
+        <span class="acc-title">Others</span>
+        <svg class="acc-arrow" width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,3 5,7 9,3"/></svg>
+      </div>
+      <div class="acc-body">
+        <button class="reset-text-btn" id="reset-acc-header" style="margin-top:0;">Reset Position & Size</button>
+      </div>
+    </div>
+
+  </div>
+
+
+  </div>
+</div>
+
+<!-- Quick Access Panel (free-floating, draggable anywhere; appears only once a link is added) -->
+<div id="quick-panel" class="empty">
+  <div id="quick-panel-links"></div>
+</div>
+
+<div id="ql-ctx-menu">
+  <div class="ql-ctx-item" id="ql-ctx-edit">Edit</div>
+  <div id="ql-ctx-edit-panel" class="ql-ctx-edit-panel">
+    <div class="ql-ctx-item" id="ql-ctx-icon">Icon</div>
+    <div class="ql-ctx-item" id="ql-ctx-name">Name</div>
+  </div>
+  <div class="ql-ctx-item" id="ql-ctx-remove">🗑 &nbsp;Remove</div>
+</div>
+
+<!-- Browser Tools Panel (free-floating, draggable anywhere; Bookmarks/History/Downloads/Settings/Extensions) -->
+<div id="bt-panel">
+  <div id="bt-panel-links"></div>
+</div>
+
+<div id="ctx-menu">
+  <div id="ctx-title"></div>
+  <div id="ctx-edit" class="ctx-item">
+    <div class="ctx-item-inner">Edit</div>
+  </div>
+  <div id="ctx-edit-panel">
+    <div id="ctx-icon" class="ctx-cat-item">Icon</div>
+    <div id="ctx-name" class="ctx-cat-item">Name</div>
+    <div id="ctx-name-row" class="ctx-input-row" style="display:none">
+      <div class="ctx-input-wrap">
+        <input id="ctx-name-input" class="ctx-inline-input" type="text" placeholder="Shortcut name"/>
+        <button id="ctx-name-clear" class="ctx-input-clear">✕</button>
+      </div>
+      <button id="ctx-name-confirm" class="ctx-inline-btn">↵</button>
+    </div>
+    <div id="ctx-url" class="ctx-cat-item">URL</div>
+    <div id="ctx-url-row" class="ctx-input-row" style="display:none">
+      <div class="ctx-input-wrap">
+        <input id="ctx-url-input" class="ctx-inline-input" type="text" placeholder="https://..."/>
+        <button id="ctx-url-clear" class="ctx-input-clear">✕</button>
+      </div>
+      <button id="ctx-url-confirm" class="ctx-inline-btn">↵</button>
+    </div>
+  </div>
+  <div id="ctx-move" class="ctx-item">
+    <div class="ctx-item-inner">
+      Move &nbsp;<span class="ctx-move-arrow">›</span>
+    </div>
+  </div>
+  <div id="ctx-cats"></div>
+  <div id="ctx-delete" class="ctx-item ctx-danger">
+    <div class="ctx-item-inner">Remove</div>
+  </div>
+</div>
+
+<script src="floating-sidebar.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
